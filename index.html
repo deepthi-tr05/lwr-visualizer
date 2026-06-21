@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LWR Visualizer | Locally Weighted Regression</title>
+  <meta name="description" content="Interactive Locally Weighted Regression (LOESS) visualizer. Adjust the bandwidth kernel parameter τ in real-time and see how the regression curve adapts." />
+  <meta name="keywords" content="locally weighted regression, LOESS, kernel regression, machine learning, data visualization, bandwidth parameter" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Particle Background -->
+  <canvas id="bgCanvas" class="bg-canvas"></canvas>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+            <path d="M4 22 Q8 10 12 16 Q16 22 20 8 Q24 -2 26 14" stroke="url(#lg1)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <circle cx="4" cy="22" r="2" fill="#f472b6"/>
+            <circle cx="12" cy="16" r="2" fill="#fb923c"/>
+            <circle cx="20" cy="8" r="2" fill="#facc15"/>
+            <defs>
+              <linearGradient id="lg1" x1="0" y1="0" x2="30" y2="30">
+                <stop offset="0%" stop-color="#f472b6"/>
+                <stop offset="50%" stop-color="#fb923c"/>
+                <stop offset="100%" stop-color="#facc15"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="logo-text">LWR<span class="logo-accent">viz</span></span>
+      </div>
+      <nav class="nav">
+        <a href="#hero" class="nav-link active" id="nav-home">Home</a>
+        <a href="#demo-section" class="nav-link" id="nav-demo">Visualizer</a>
+        <a href="#theory-section" class="nav-link" id="nav-theory">Theory</a>
+        <a href="#code-section" class="nav-link" id="nav-code">Code</a>
+      </nav>
+      <a href="https://github.com/deepthi-tr05/lwr-visualizer" target="_blank" class="github-btn" id="github-nav-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero" id="hero">
+    <div class="hero-left">
+      <div class="hero-badge">
+        <span class="badge-pulse"></span>
+        Non-Parametric • Kernel Methods • Real-Time Interactive
+      </div>
+      <h1 class="hero-title">
+        Locally Weighted<br />
+        <span class="hero-gradient">Regression</span>
+      </h1>
+      <p class="hero-sub">
+        Explore how LWR/LOESS fits smooth curves through noisy data by weighting nearby points with a <strong>Gaussian kernel</strong>. Adjust bandwidth <code>τ</code> live and watch the model adapt instantly.
+      </p>
+      <div class="hero-cta">
+        <a href="#demo-section" class="btn-primary" id="try-demo-btn">
+          Try Interactive Demo
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#code-section" class="btn-ghost" id="view-code-btn">View Python Code</a>
+      </div>
+      <div class="hero-metrics">
+        <div class="metric">
+          <span class="metric-val">100</span>
+          <span class="metric-lbl">Data Points</span>
+        </div>
+        <div class="metric-sep"></div>
+        <div class="metric">
+          <span class="metric-val">sin(x)</span>
+          <span class="metric-lbl">True Function</span>
+        </div>
+        <div class="metric-sep"></div>
+        <div class="metric">
+          <span class="metric-val">σ=0.1</span>
+          <span class="metric-lbl">Noise Level</span>
+        </div>
+        <div class="metric-sep"></div>
+        <div class="metric">
+          <span class="metric-val">∞</span>
+          <span class="metric-lbl">τ Options</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="mini-chart-box">
+        <div class="mini-chart-header">
+          <span class="mini-dot green"></span>
+          <span class="mini-dot yellow"></span>
+          <span class="mini-dot red"></span>
+          <span class="mini-title">lwr_preview.py</span>
+        </div>
+        <canvas id="miniChart" height="260"></canvas>
+        <div class="mini-badge">τ = 0.5 · Live Preview</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DEMO SECTION ===== -->
+  <section class="demo-section" id="demo-section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Interactive</span>
+        <h2 class="section-title">Live LWR Visualizer</h2>
+        <p class="section-desc">Drag the <strong>τ (bandwidth)</strong> slider to control how much each nearby point influences the prediction. Lower τ = high variance, higher τ = high bias.</p>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="controls-panel">
+        <div class="control-row">
+          <!-- Bandwidth -->
+          <div class="control-block" id="tau-control">
+            <div class="control-top">
+              <span class="control-name">Bandwidth τ (tau)</span>
+              <div class="control-badge tau-badge">
+                τ = <span id="tauDisplay">0.50</span>
+              </div>
+            </div>
+            <input type="range" id="tauSlider" min="0.1" max="2.0" step="0.05" value="0.5" class="slider tau-slider" />
+            <div class="slider-labels">
+              <span>0.1 · Overfitting</span>
+              <span>2.0 · Underfitting</span>
+            </div>
+          </div>
+
+          <!-- Noise Seed Regenerate -->
+          <div class="control-block" id="noise-control">
+            <div class="control-top">
+              <span class="control-name">Noise Level σ</span>
+              <div class="control-badge">σ = <span id="sigmaDisplay">0.10</span></div>
+            </div>
+            <input type="range" id="sigmaSlider" min="0.01" max="0.5" step="0.01" value="0.1" class="slider sigma-slider" />
+            <div class="slider-labels">
+              <span>0.01 · Clean</span>
+              <span>0.50 · Noisy</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="control-actions">
+            <button class="action-btn regenerate" id="regenerateBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+              New Data
+            </button>
+            <button class="action-btn show-true" id="showTrueBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              True Curve
+            </button>
+            <button class="action-btn reset" id="resetBtn">
+              ↺ Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Chart -->
+      <div class="chart-card">
+        <div class="chart-legend">
+          <div class="legend-item" id="legend-scatter">
+            <span class="legend-dot" style="background:#f472b6;"></span>
+            <span>Training Data (noisy)</span>
+          </div>
+          <div class="legend-item" id="legend-lwr">
+            <span class="legend-line" style="background:linear-gradient(90deg,#fb923c,#facc15);"></span>
+            <span>LWR Prediction</span>
+          </div>
+          <div class="legend-item hidden" id="legend-true">
+            <span class="legend-line" style="background:rgba(148,163,184,0.5); border-style:dashed;"></span>
+            <span>True sin(x)</span>
+          </div>
+        </div>
+        <div class="chart-area">
+          <canvas id="mainChart"></canvas>
+        </div>
+        <div class="chart-info-bar">
+          <span class="info-item">📍 <span id="rmseDisplay">RMSE: —</span></span>
+          <span class="info-item">🎯 <span id="kernelDisplay">Kernel: Gaussian</span></span>
+          <span class="info-item">⚙️ <span id="pointsDisplay">300 prediction points</span></span>
+        </div>
+      </div>
+
+      <!-- Bias-Variance cards -->
+      <div class="bv-grid">
+        <div class="bv-card underfit" id="bv-underfit">
+          <div class="bv-icon">📉</div>
+          <div class="bv-label">τ &gt; 1.5 → Underfitting</div>
+          <div class="bv-desc">Kernel too wide, averaging over far-away points. High bias, low variance.</div>
+          <button class="bv-btn" onclick="setTau(1.8)" id="try-underfit-btn">Try τ = 1.8</button>
+        </div>
+        <div class="bv-card optimal" id="bv-optimal">
+          <div class="bv-icon">🎯</div>
+          <div class="bv-label">τ ≈ 0.5 → Optimal Fit</div>
+          <div class="bv-desc">Balanced trade-off. Smooth curve capturing the true sinusoidal pattern.</div>
+          <button class="bv-btn" onclick="setTau(0.5)" id="try-optimal-btn">Try τ = 0.5</button>
+        </div>
+        <div class="bv-card overfit" id="bv-overfit">
+          <div class="bv-icon">📈</div>
+          <div class="bv-label">τ &lt; 0.2 → Overfitting</div>
+          <div class="bv-desc">Kernel too narrow, fitting the noise. Low bias, high variance.</div>
+          <button class="bv-btn" onclick="setTau(0.15)" id="try-overfit-btn">Try τ = 0.15</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== THEORY SECTION ===== -->
+  <section class="theory-section" id="theory-section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Theory</span>
+        <h2 class="section-title">How LWR Works</h2>
+        <p class="section-desc">LWR fits a separate weighted linear model for every query point x₀ using nearby training data.</p>
+      </div>
+      <div class="theory-grid">
+        <div class="theory-card" id="theory-step1">
+          <div class="theory-num">01</div>
+          <div class="theory-emoji">🎯</div>
+          <h3>Pick a Query Point x₀</h3>
+          <p>To predict at x₀, a local weighted linear model is fitted using all training points — but not equally.</p>
+        </div>
+        <div class="theory-card" id="theory-step2">
+          <div class="theory-num">02</div>
+          <div class="theory-emoji">🔔</div>
+          <h3>Compute Gaussian Kernel Weights</h3>
+          <p>Each training point gets a weight based on its distance to x₀ using the Gaussian kernel:</p>
+          <div class="formula">w(i) = exp(−‖x⁽ⁱ⁾ − x₀‖² / 2τ²)</div>
+        </div>
+        <div class="theory-card" id="theory-step3">
+          <div class="theory-num">03</div>
+          <div class="theory-emoji">⚖️</div>
+          <h3>Weighted Least Squares</h3>
+          <p>Solve the weighted normal equations to find local parameters θ:</p>
+          <div class="formula">θ = (XᵀWX)⁻¹ XᵀWy</div>
+        </div>
+        <div class="theory-card" id="theory-step4">
+          <div class="theory-num">04</div>
+          <div class="theory-emoji">📍</div>
+          <h3>Local Prediction</h3>
+          <p>Use θ to predict only at x₀ — then repeat for every query point in the test set.</p>
+          <div class="formula">ŷ(x₀) = [1, x₀]ᵀ · θ</div>
+        </div>
+      </div>
+
+      <!-- Kernel Visualization -->
+      <div class="kernel-viz" id="kernel-viz-block">
+        <h3 class="kernel-title">Kernel Width Effect</h3>
+        <div class="kernel-row">
+          <div class="kernel-item">
+            <canvas id="kernel1" width="200" height="120"></canvas>
+            <span class="kernel-label">τ = 0.2 · Narrow</span>
+          </div>
+          <div class="kernel-item">
+            <canvas id="kernel2" width="200" height="120"></canvas>
+            <span class="kernel-label">τ = 0.5 · Balanced</span>
+          </div>
+          <div class="kernel-item">
+            <canvas id="kernel3" width="200" height="120"></canvas>
+            <span class="kernel-label">τ = 1.5 · Wide</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CODE SECTION ===== -->
+  <section class="code-section" id="code-section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Source Code</span>
+        <h2 class="section-title">Python Implementation</h2>
+        <p class="section-desc">Full implementation using only NumPy and Matplotlib — no sklearn required.</p>
+      </div>
+      <div class="code-card">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="code-filename">lwr.py</span>
+          <button class="copy-code-btn" id="copyBtn" onclick="copyCode()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre class="code-pre"><code id="codeBlock"><span class="c-kw">import</span> numpy <span class="c-kw">as</span> np
+<span class="c-kw">import</span> matplotlib.pyplot <span class="c-kw">as</span> plt
+
+<span class="c-cm"># ── Reproducible random seed ──────────────────────────</span>
+np.random.seed(<span class="c-num">0</span>)
+
+<span class="c-cm"># ── Generate training data: sin(x) + Gaussian noise ──</span>
+X = np.linspace(<span class="c-num">-3</span>, <span class="c-num">3</span>, <span class="c-num">100</span>).reshape(<span class="c-num">-1</span>, <span class="c-num">1</span>)
+y = np.sin(X).ravel() + np.random.normal(<span class="c-num">0</span>, <span class="c-num">0.1</span>, <span class="c-num">100</span>)
+
+<span class="c-cm"># ── Gaussian kernel function ──────────────────────────</span>
+<span class="c-kw">def</span> <span class="c-fn">kernel</span>(x0, X, t):
+    <span class="c-cm">"""Weight each point by distance to query x0."""</span>
+    <span class="c-kw">return</span> np.exp(-np.sum((X - x0)**<span class="c-num">2</span>, axis=<span class="c-num">1</span>) / (<span class="c-num">2</span> * t**<span class="c-num">2</span>))
+
+<span class="c-cm"># ── LWR prediction at a single point x0 ──────────────</span>
+<span class="c-kw">def</span> <span class="c-fn">predict</span>(x0, t=<span class="c-num">0.5</span>):
+    <span class="c-cm">"""Locally weighted linear regression prediction."""</span>
+    W     = np.diag(kernel(x0, X, t))          <span class="c-cm"># weight matrix</span>
+    X1    = np.c_[np.ones(len(X)), X]           <span class="c-cm"># add bias column</span>
+    theta = np.linalg.pinv(X1.T @ W @ X1) @ X1.T @ W @ y
+    <span class="c-kw">return</span> np.r_[<span class="c-num">1</span>, x0] @ theta
+
+<span class="c-cm"># ── Generate predictions over dense grid ─────────────</span>
+Xt = np.linspace(<span class="c-num">-3</span>, <span class="c-num">3</span>, <span class="c-num">300</span>).reshape(<span class="c-num">-1</span>, <span class="c-num">1</span>)
+yp = np.array([predict(x) <span class="c-kw">for</span> x <span class="c-kw">in</span> Xt])
+
+<span class="c-cm"># ── Plot ───────────────────────────────────────────────</span>
+plt.figure(figsize=(<span class="c-num">10</span>, <span class="c-num">6</span>))
+plt.scatter(X, y, color=<span class="c-str">'#f472b6'</span>, s=<span class="c-num">40</span>, alpha=<span class="c-num">0.7</span>, label=<span class="c-str">'Training data'</span>)
+plt.plot(Xt, yp, color=<span class="c-str">'#fb923c'</span>, linewidth=<span class="c-num">2.5</span>, label=<span class="c-str">'LWR fit (τ=0.5)'</span>)
+plt.xlabel(<span class="c-str">'x'</span>); plt.ylabel(<span class="c-str">'y'</span>)
+plt.title(<span class="c-str">'Locally Weighted Regression'</span>)
+plt.legend(); plt.grid(alpha=<span class="c-num">0.3</span>)
+plt.tight_layout(); plt.show()</code></pre>
+      </div>
+
+      <!-- Install block -->
+      <div class="install-block" id="install-block">
+        <div class="install-header">
+          <span class="code-filename">terminal</span>
+        </div>
+        <pre class="install-pre"><code><span class="c-cm"># Install dependencies</span>
+pip install numpy matplotlib
+
+<span class="c-cm"># Run the script</span>
+python lwr.py</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <svg width="20" height="20" viewBox="0 0 30 30" fill="none">
+          <path d="M4 22 Q8 10 12 16 Q16 22 20 8 Q24 -2 26 14" stroke="url(#lg2)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <defs><linearGradient id="lg2" x1="0" y1="0" x2="30" y2="30"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#facc15"/></linearGradient></defs>
+        </svg>
+        <span>LWRviz</span>
+      </div>
+      <p class="footer-text">Interactive Locally Weighted Regression Visualizer · Built with vanilla HTML/CSS/JS</p>
+      <div class="footer-links">
+        <a href="https://github.com/deepthi-tr05/lwr-visualizer" target="_blank" id="footer-github-link">GitHub</a>
+        <a href="https://en.wikipedia.org/wiki/Local_regression" target="_blank" id="footer-wiki-link">LOESS Wikipedia</a>
+        <a href="https://cs229.stanford.edu/notes2022fall/main_notes.pdf" target="_blank" id="footer-cs229-link">CS229 Notes</a>
+      </div>
+      <p class="footer-copy">© 2026 Deepthi · MIT License</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -11,8 +11,7 @@
 **An interactive web visualizer for Locally Weighted Regression (LWR / LOESS).**  
 Adjust the Gaussian kernel bandwidth **τ** in real-time and watch the model shift between overfitting and underfitting.
 
-[🚀 Live Demo](https://lwr-visualizer.vercel.app) • [📊 Try the Visualizer](https://lwr-visualizer.vercel.app/#demo-section) • [💻 Source Code](https://github.com/deepthi-tr05/lwr-visualizer)
-
+[🚀 Live Demo](https://lwr-visualizer.vercel.app/)
 </div>
 
 ---
